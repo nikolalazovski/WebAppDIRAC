@@ -12,7 +12,7 @@
  * 
  */
 Ext.define(
-	'Ext.ux.desktop.App',
+	'DIRACWebFramework.view.App',
 	{
 		mixins : {
 			observable : 'Ext.util.Observable'
