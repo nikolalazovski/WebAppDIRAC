@@ -42,23 +42,39 @@ Ext.define(
 		 */
 		_uid_counter:0,
 
-		constructor : function(configData) {
+		constructor : function() {
 
 			var me = this;
 
-			me.addEvents('ready', 'beforeunload');
+			Ext.Ajax.request({
+			    url: 'up/getConfig',
+			    params: {
+			    },
+			    scope:me,
+			    success: function(response){
+			    	
+			    	var me = this;
+			    	
+			    	me.configData = Ext.JSON.decode(response.responseText);
+			    	
+			    	me.addEvents('ready', 'beforeunload');
 
-			me.mixins.observable.constructor.call(this, undefined);
+					me.mixins.observable.constructor.call(this, undefined);
 
-			if (Ext.isReady) {
-				Ext.Function.defer(me.init, 10, me);
-			} else {
-				Ext.onReady(me.init, me);
-			}
+					if (Ext.isReady) {
+						Ext.Function.defer(me.init, 10, me);
+					} else {
+						Ext.onReady(me.init, me);
+					}
 
-			me.configData = configData;
-
-			me.callParent();
+					me.callParent();
+			    	
+			    	
+			    }
+			});
+			
+			
+			
 
 		},
 
