@@ -18,11 +18,8 @@
             'Ext.ux.desktop': '/DIRAC/static/core/view'
         });
 
-        Ext.require('Ext.ux.desktop.App');
-
-        var myDesktopApp;
         Ext.onReady(function () {
-            myDesktopApp = new Ext.ux.desktop.App({{ config_data }});
+            
             setTimeout(function(){ Ext.get("loading").hide(); },1000);
             
         });
