@@ -231,26 +231,29 @@ Ext.define(
 		 */
 		createWindow : function(moduleName) {
 
-			Ext.require(moduleName, function() {
+			var oParts = moduleName.split(".");
+			
+			
+			Ext.Loader.setPath(oParts[2], "/DIRAC/static/"+oParts[0]+"/"+oParts[2]);
+			
+			var view = Ext.create(moduleName);
+			var window = desktop.createWindow({
+                title : "Example",
+                width : 600,
+                height : 400,
+                iconCls : 'notepad',
+                animCollapse : false,
+                border : false,
+                hideMode : 'offsets',
+                layout : 'fit',
+                items : view
+              });
+			
+			view.setUID(++this._uid_counter);
+			window.setLoadedObject(view);
+			window.show();
 				
-				var view = Ext.create(moduleName);
-				var window = desktop.createWindow({
-                    title : "Example",
-                    width : 600,
-                    height : 400,
-                    iconCls : 'notepad',
-                    animCollapse : false,
-                    border : false,
-                    hideMode : 'offsets',
-                    layout : 'fit',
-                    items : view
-                  });
-				
-				view.setUID(++this._uid_counter);
-				window.setLoadedObject(view);
-				window.show();
-				
-			}, this);
+			
 				
 		},
 
