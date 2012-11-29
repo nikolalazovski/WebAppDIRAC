@@ -15,7 +15,8 @@
     <!-- </x-bootstrap> -->
     <script type="text/javascript">
         Ext.Loader.setPath({
-            'Ext.ux.desktop': '/DIRAC/static/core/view'
+            'Ext.ux.desktop': '/DIRAC/static/core/view',
+            'DIRAC':'/DIRAC/static/DIRAC',
         });
 
         Ext.onReady(function () {

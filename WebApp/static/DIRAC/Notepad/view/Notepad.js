@@ -7,9 +7,9 @@
 
 Ext
 		.define(
-				'DIRAC.view.Notepad',
+				'DIRAC.Notepad.view.Notepad',
 				{
-					extend : 'Ext.ux.desktop.Module',
+					//extend : 'Ext.ux.desktop.Module',
 
 					requires : [ 'Ext.form.field.HtmlEditor'
 					// 'Ext.form.field.TextArea'

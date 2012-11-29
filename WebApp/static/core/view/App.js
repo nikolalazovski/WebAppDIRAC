@@ -250,10 +250,11 @@ Ext.define(
 			var oParts = moduleName.split(".");
 			
 			
-			Ext.Loader.setPath(oParts[2], "/DIRAC/static/"+oParts[0]+"/"+oParts[2]);
+			//Ext.Loader.setPath(oParts[2], "/static/"+oParts[0]+"/"+oParts[2]);
 			
 			var view = Ext.create(moduleName);
-			var window = desktop.createWindow({
+			
+			var window = this.desktop.createWindow({
                 title : "Example",
                 width : 600,
                 height : 400,
@@ -265,7 +266,7 @@ Ext.define(
                 items : view
               });
 			
-			view.setUID(++this._uid_counter);
+			//view.setUID(++this._uid_counter);
 			window.setLoadedObject(view);
 			window.show();
 				

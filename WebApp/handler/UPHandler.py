@@ -6,6 +6,10 @@ from WebAppDIRAC.Lib.WebHandler import WebHandler, WErr, WOK, asyncGen
 from DIRAC.Core.Utilities import DEncode
 from DIRAC.Core.DISET.ThreadConfig import ThreadConfig
 from DIRAC.FrameworkSystem.Client.UserProfileClient import UserProfileClient
+from DIRAC import gConfig
+from tornado.web import HTTPError
+from WebAppDIRAC.Lib.WebHandler import WebHandler
+from DIRAC.ConfigurationSystem.Client.Helpers import Registry
 
 class UPHandler( WebHandler ):
 
@@ -100,10 +104,10 @@ class UPHandler( WebHandler ):
       '''
         Reading the configuration for the START menu
       '''
-      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.GridWindow', "launcher": {"text": 'Grid Window', "iconCls":'icon-grid'}, "jsLoaded":0})
-      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.TabWindow', "launcher": {"text": 'Tab Windows', "iconCls":'tabs'}, "jsLoaded":0})
-      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.AccordionWindow', "launcher": {"text": 'Accordion Window', "iconCls":"accordion"}, "jsLoaded":0})
-      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.Notepad', "launcher": {"text": 'Notepad', "iconCls":'notepad'}, "jsLoaded":0}) 
+#      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.GridWindow', "launcher": {"text": 'Grid Window', "iconCls":'icon-grid'}, "jsLoaded":0})
+#      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.TabWindow', "launcher": {"text": 'Tab Windows', "iconCls":'tabs'}, "jsLoaded":0})
+#      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.AccordionWindow', "launcher": {"text": 'Accordion Window', "iconCls":"accordion"}, "jsLoaded":0})
+      result["desktop_config"]["start_menu_config"].append({"name":'DIRAC.Notepad.view.Notepad', "launcher": {"text": 'Notepad', "iconCls":'notepad'}, "jsLoaded":0}) 
       
       '''
         Reading the configuration for the SHORTCUTS placed at the desktop
