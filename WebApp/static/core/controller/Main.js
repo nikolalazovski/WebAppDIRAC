@@ -5,29 +5,11 @@ Ext
           extend : 'Ext.app.Controller',
 
           init : function() {
-            console.log('cool');
+            
             this.control({
-              'taskbar' : {
-                show : this.onJobMonitor,
-                resize : this.onJobMonitor
-              },
-              'taskbar>button[action=start]' : {
-                click : this.onClick,
-              },
-              'diracMenu menuitem[action=openMenuItem]' : {
-                click : this.onMenuItem,
-              },
-              'taskbar>button[action=taskbarwin1]' : {
-                oooo : this.onTaskbarWin1,
-              }
             });
           },
-          onJobMonitor : function() {
-            console.log('coool2');
-          },
-          onClick : function() {
-            console.log('Start menu clicked!!!');
-          },
+          
           onMenuItem : function(menu, item, e, eOpts) {
 
             if (menu.text == 'Old Job Monitor') {
@@ -86,8 +68,5 @@ Ext
                 }
               });
             }
-          },
-          onTaskbarWin1 : function() {
-            alert('cooooll');
           }
         });

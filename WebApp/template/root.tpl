@@ -15,7 +15,7 @@
     <!-- </x-bootstrap> -->
     <script type="text/javascript">
         Ext.Loader.setPath({
-            'Ext.ux.desktop': '/DIRAC/static/core/js',
+            'Ext.ux.desktop': '/DIRAC/static/core/view',
             'DIRAC': '/DIRAC/static/DIRAC'
         });
 
@@ -28,6 +28,7 @@
             
         });
     </script>
+    <script type="text/javascript" src="static/core/app.js"></script>
     <!-- </x-compile> -->
     <style type="text/css">
 	    #loading{
