@@ -11,9 +11,7 @@ Ext
 				{
 					//extend : 'Ext.ux.desktop.Module',
 
-					requires : [ 'Ext.form.field.HtmlEditor'
-					// 'Ext.form.field.TextArea'
-					],
+					requires : [ 'Ext.form.field.HtmlEditor'],
 					controllers:[],
 
 					init : function(parentApp) {

@@ -253,6 +253,7 @@ Ext.define(
 			//Ext.Loader.setPath(oParts[2], "/static/"+oParts[0]+"/"+oParts[2]);
 			
 			var view = Ext.create(moduleName);
+			view.init(this);
 			
 			var window = this.desktop.createWindow({
                 title : "Example",
