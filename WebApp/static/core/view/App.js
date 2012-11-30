@@ -247,13 +247,12 @@ Ext.define(
 		 */
 		createWindow : function(moduleName) {
 
-			var oParts = moduleName.split(".");
 			
-			
-			//Ext.Loader.setPath(oParts[2], "/static/"+oParts[0]+"/"+oParts[2]);
 			
 			var view = Ext.create(moduleName);
 			view.init(this);
+			
+			
 			
 			var window = this.desktop.createWindow({
                 title : "Example",
@@ -264,14 +263,13 @@ Ext.define(
                 border : false,
                 hideMode : 'offsets',
                 layout : 'fit',
-                items : view
+                items : [view]
               });
+			
 			
 			//view.setUID(++this._uid_counter);
 			window.setLoadedObject(view);
 			window.show();
-				
-			
 				
 		},
 

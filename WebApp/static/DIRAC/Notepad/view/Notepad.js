@@ -9,7 +9,7 @@ Ext
 		.define(
 				'DIRAC.Notepad.view.Notepad',
 				{
-					//extend : 'Ext.ux.desktop.Module',
+					extend : 'Ext.panel.Panel',
 
 					requires : [ 'Ext.form.field.HtmlEditor'],
 					controllers:[],
@@ -20,10 +20,25 @@ Ext
 							text : 'Notepad',
 							iconCls : 'notepad'
 						};
-						this.editor = new Ext.form.field.HtmlEditor({value : [
-						    												'Some <b>rich</b> <font color="red">text</font> goes <u>here</u><br>',
-						    												'Give it a try!' ].join('')
-						    										});
+					},
+					
+					initComponent : function() {
+						
+						var me = this;
+						
+						me.editor = new Ext.form.field.HtmlEditor({value : [
+							    												'Some <b>rich</b> <font color="red">text</font> goes <u>here</u><br>',
+							    												'Give it a try!' ].join('')
+							    										, layout:'fit'});
+						
+						
+						Ext.apply(me, {
+							layout: 'fit',//{ type: 'vbox', pack: 'start', align: 'stretch' },
+							items : [ me.editor]
+						});
+
+						me.callParent(arguments);
+						
 					},
 					
 					loadState: function(data){
