@@ -9,81 +9,51 @@ Ext
 		.define(
 				'DIRAC.Notepad.view.Notepad',
 				{
-					extend : 'Ext.panel.Panel',
+					extend : 'Ext.ux.desktop.Module',
 
 					requires : [ 'Ext.form.field.HtmlEditor'],
-					controllers:[],
 
-					init : function(parentApp) {
-						this.app = parentApp;
-						this.launcher = {
-							text : 'Notepad',
-							iconCls : 'notepad'
-						};
-					},
-					
-					initComponent : function() {
+					launcher: {
 						
+						text : 'Notepad',
+						iconCls : 'notepad'
+						
+					},
+
+					initComponent : function() {
+
 						var me = this;
 						
-						me.editor = new Ext.form.field.HtmlEditor({value : [
-							    												'Some <b>rich</b> <font color="red">text</font> goes <u>here</u><br>',
-							    												'Give it a try!' ].join('')
-							    										, layout:'fit'});
-						
-						
+						me.editor = new Ext.form.field.HtmlEditor(
+								{
+									value : [
+											'Some <b>rich</b> <font color="red">text</font> goes <u>here</u><br>',
+											'Give it a try!' ].join(''),
+									layout : 'fit'
+								});
+
 						Ext.apply(me, {
-							layout: 'fit',//{ type: 'vbox', pack: 'start', align: 'stretch' },
-							items : [ me.editor]
+							layout : 'fit',
+							items : [ me.editor ]
 						});
 
 						me.callParent(arguments);
-						
+
 					},
-					
-					loadState: function(data){
-						
-						var me=this;
-						me.editor.setValue(data["text"]); 
-						
-					},
-					
-					getStateData:function(){
-						
-						var me=this;
-						return {text:me.editor.getValue()};
-						
-					},
-					createWindow : function() {
-						
+
+					loadState : function(data) {
+
 						var me = this;
-						
-						var desktop = this.app.getDesktop();
-							
-						win = desktop
-								.createWindow({
-									title : 'Notepad',
-									width : 600,
-									height : 400,
-									iconCls : 'notepad',
-									animCollapse : false,
-									border : false,
-									// defaultFocus: 'notepad-editor',
-									// EXTJSIV-1300
+						me.editor.setValue(data["text"]);
 
-									// IE has a bug where it will keep the
-									// iframe's background visible when the
-									// window
-									// is set to visibility:hidden. Hiding the
-									// window via position offsets instead gets
-									// around this bug.
-									hideMode : 'offsets',
+					},
 
-									layout : 'fit',
+					getStateData : function() {
 
-									items : [ me.editor ]
-								});
+						var me = this;
+						return {
+							text : me.editor.getValue()
+						};
 
-						return win;
 					}
 				});
