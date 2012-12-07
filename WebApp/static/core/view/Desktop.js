@@ -214,7 +214,7 @@ Ext.define(
 			me.statesMenu = new Ext.menu.Menu();
 			
 			Ext.Ajax.request({
-			    url: 'UP/listAppState',
+			    url: 'up/listAppState',
 			    params: {
 			        app: 	"desktop",
 			        obj: 	"desktop"
@@ -715,7 +715,7 @@ Ext.define(
 			me.cache.windows[appName]=null;
 			
 			Ext.Ajax.request({
-			    url: 'UP/listAppState',
+			    url: 'up/listAppState',
 			    params: {
 			        app: 	appName,
 			        obj: 	"application"
@@ -1024,7 +1024,7 @@ Ext.define(
 			    	  
 			    	  
 			    	  Ext.Ajax.request({
-						    url: 'UP/delAppState',
+						    url: 'up/delAppState',
 						    params: {
 						    	app: "desktop",
 						    	name: 	oStateName,
@@ -1053,6 +1053,7 @@ Ext.define(
 			var me = this;
 			
 			var oStateName = oSelectEl.options[index].value;
+			delete me.cache.desktop[oStateName];
 			
 			for(var i=0;i<me.statesMenu.items.length;i++){
 				
@@ -1081,7 +1082,7 @@ Ext.define(
 			for (i = oSelectEl.length - 1; i>=0; i--) 
 				oSelectEl.remove(i);
 			
-			for(var stateName in me.loadedObject.app.getDesktop().cache.windows[me.appClassName]){
+			for(var stateName in me.cache.desktop){
 				
 				  var elOptNew = document.createElement('option');
 				  elOptNew.text = stateName;
@@ -1110,7 +1111,7 @@ Ext.define(
 			me.cache.desktop = {};
 			
 			Ext.Ajax.request({
-			    url: 'UP/listAppState',
+			    url: 'up/listAppState',
 			    params: {
 			        app: 	"desktop",
 			        obj: 	"desktop"
@@ -1265,7 +1266,7 @@ Ext.define(
 
 			
 			Ext.Ajax.request({
-			    url: 'UP/saveAppState',
+			    url: 'up/saveAppState',
 			    params: {
 			        app: 	"desktop",
 			        name: 	stateName,

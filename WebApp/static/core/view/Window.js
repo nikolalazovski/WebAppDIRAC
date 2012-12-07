@@ -154,7 +154,7 @@ Ext.define(
 							 * if the cache does not exist
 							 */
 							Ext.Ajax.request({
-							    url: 'UP/listAppState',
+							    url: 'up/listAppState',
 							    params: {
 							        app: 	me.appClassName,
 							        obj: 	"application"
@@ -493,7 +493,7 @@ Ext.define(
 						    	  
 						    	  
 						    	  Ext.Ajax.request({
-									    url: 'UP/delAppState',
+									    url: 'up/delAppState',
 									    params: {
 									    	app: me.appClassName,
 									    	name: 	oStateName,
@@ -584,7 +584,7 @@ Ext.define(
 						}
 						
 						Ext.Ajax.request({
-						    url: 'UP/saveAppState',
+						    url: 'up/saveAppState',
 						    params: {
 						        app: 	me.appClassName,
 						        name: 	stateName,
@@ -595,15 +595,15 @@ Ext.define(
 						    success: function(response){
 						    	var me = this;
 						    	Ext.MessageBox.alert('Message','State saved successfully !');
-						    	if(isNewItem)
+						    	if(isNewItem){
 						    		me.desktop.addStateToExistingWindows(stateName,me.appClassName,sendData);
-						    	else
+						    		me.saveWindow.hide();
+						    	}else
 						    		me.desktop.cache.windows[me.appClassName][stateName]=sendData;
-						    	me.saveForm.getForm().reset();
 						    	me.currentState = stateName;
 								me.setTitle(me.loadedObject.launcher.text+" ["+me.currentState+"]");
 								me.taskButton.setText(Ext.util.Format.ellipsis(me.loadedObject.launcher.text+" ["+stateName+"]",20));
-								me.saveWindow.hide();
+								
 						    }
 						});
 						
