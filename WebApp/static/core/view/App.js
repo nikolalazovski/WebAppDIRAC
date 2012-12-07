@@ -241,6 +241,7 @@ Ext.define(
 			Ext.require(moduleName, function() {
 				
 				var me = this;
+				
 				var instance = Ext.create(moduleName);
 				instance.setUID(++me._uid_counter);	
 				var window = me.desktop.createWindow({
@@ -254,7 +255,6 @@ Ext.define(
 					setupData: setupData,
 					loadedObject:instance
 				});
-				
 				window.show();
 				
 			},this);
