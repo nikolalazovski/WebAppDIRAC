@@ -9,7 +9,9 @@
  * @class Ext.ux.desktop.Desktop
  * @extends Ext.panel.Panel
  * 
- * This class manages the wallpaper, shortcuts and taskbar.
+ * This class manages the wallpaper, shortcuts, 
+ * taskbar, desktop states, 
+ * and the broadcast part for the window states.
  *          
  */
 Ext.define(
@@ -93,10 +95,14 @@ Ext.define(
 				'</div>',
 				'<span class="ux-desktop-shortcut-text">{name}</span>',
 				'</div>', '</tpl>', '<div class="x-clear"></div>' ],
-
+		
+		/**
+		 * @property {String} currentDesktopState Name of the current active desktop state
+		 */		
+		currentDesktopState: "",
 		/**
 		 * @cfg {Object} taskbarConfig The config object for the
-		 *      TaskBar.
+		 *      TaskBar.http://www.youtube.com/
 		 */
 		taskbarConfig : null,
 
@@ -163,7 +169,7 @@ Ext.define(
 				me.app.createWindow(record.data.module);
 
 		},
-
+		
 		afterRender : function() {
 			var me = this;
 			me.callParent();
@@ -203,26 +209,90 @@ Ext.define(
 			var me = this, ret = {
 				items : me.contextMenuItems || []
 			};
-
-			if (ret.items.length) {
-				ret.items.push('-');
-			}
-
-			ret.items.push({
-				text : 'Tile',
-				handler : me.tileWindows,
-				scope : me,
-				minWindows : 1
-			}, {
-				text : 'Cascade',
-				handler : me.cascadeWindows,
-				scope : me,
-				minWindows : 1
-			})
+			
+			//reading the existing states of the desktop for that user
+			me.statesMenu = new Ext.menu.Menu();
+			
+			Ext.Ajax.request({
+			    url: 'UP/listAppState',
+			    params: {
+			        app: 	"desktop",
+			        obj: 	"desktop"
+			    },
+			    scope:me,
+			    success: function(response){
+			    	
+			    	var me = this;
+			    	var states = Ext.JSON.decode(response.responseText);
+			    	me.cache.desktop={};
+			    	
+			    	for (var stateName in states) {	
+			    		
+			    		var newItem = Ext.create('Ext.menu.Item', {
+										    			  text: stateName,
+										    			  handler: Ext.bind(me.oprLoadDesktopState, me, [stateName], false),
+										    			  scope:me
+										    		});
+			    		
+			    		me.statesMenu.add(newItem);
+			    		
+			    		me.cache.desktop[stateName]=states[stateName];
+			    		
+			    	}
+			    	
+			    	
+			    }
+			});
+			
+			ret.items.push(
+				
+				{
+					text : 'Tile',
+					handler : me.tileWindows,
+					scope : me,
+					iconCls : "toolbar-other-tile",
+					minWindows : 1
+				}, {
+					text : 'Cascade',
+					handler : me.cascadeWindows,
+					scope : me,
+					iconCls : "toolbar-other-cascade",
+					minWindows : 1
+				},
+				'-',
+				{
+					text : "Load state",
+					iconCls : "toolbar-other-load",
+					menu : me.statesMenu
+				}, {
+					text : "Save",
+					iconCls : "toolbar-other-save",
+					handler:me.oprSaveDesktopState,
+					minWindows : 1,
+					scope: me
+				},{
+					text : "Save As ...",
+					iconCls : "toolbar-other-save",
+					handler : me.formSaveState,
+					minWindows : 1,
+					scope: me
+				},{
+					text : "Refresh states",
+					iconCls : "toolbar-other-refresh",
+					handler:me.oprRefreshAllDesktopStates,
+					scope: me
+				},{
+					text : "Manage states ...",
+					iconCls : "toolbar-other-manage",
+					handler : me.formManageStates,//function(){alert("TDMMMMM");},//me.formManageStates,
+					scope: me
+				}
+			)
 
 			return ret;
 		},
-
+		
+		
 		/**
 		 * Function to tile the windows within the available desktop
 		 * space
@@ -369,7 +439,7 @@ Ext.define(
 		// ----------------------------------------------------------------------------------------
 
 		/**
-		 * @private Handler called before the menu is shown (?)
+		 * @private Handler called before the desktop context menu 
 		 * @param e
 		 */
 		onDesktopMenu : function(e) {
@@ -384,8 +454,10 @@ Ext.define(
 		},
 
 		/**
-		 * @private Handler called before the menu is shown (?)
-		 * @param menu
+		 * @private Handler called before the desktop context menu is shown
+		 * 			This function serves to disable or enable some 
+		 * 			operations that have minWindows property defined 
+		 * @param menu This parametear can be used in other menus as well.
 		 */
 		onDesktopMenuBeforeShow : function(menu) {
 			var me = this, count = me.windows.getCount();
@@ -508,6 +580,12 @@ Ext.define(
 		onWindowClose : function(win) {
 			var me = this;
 			me.windows.remove(win);
+			/*
+			 * If the number of windows get 0, 
+			 * the current desktop state is cleared
+			 */
+			if(me.windows.getCount()==0)
+				me.currentDesktopState='';
 			me.taskbar.removeTaskButton(win.taskButton);
 			me.updateActiveWindow();
 		},
@@ -522,6 +600,7 @@ Ext.define(
 		 * @param {Object}
 		 *            cls
 		 */
+		
 		createWindow : function(config, cls) {
 			var me = this, win, cfg = Ext.applyIf(config || {}, {
 				stateful : false,
@@ -563,7 +642,7 @@ Ext.define(
 			// replace normal window close
 			win.doClose = function() {
 				win.el.disableShadow();
-				//here we have to remove the object from the array of module objects
+
 				win.destroy();
 				win.doClose = Ext.emptyFn;
 			};
@@ -601,6 +680,16 @@ Ext.define(
 					&& activeWindow.taskButton);
 		},
 		
+		/*
+		 * -------------------------BROADCAST METHODS FOR THE ACTIVE WINDOWS-------------------------
+		 */
+		
+		/**
+		 * Function to add new state to the instances of the same module
+		 * @param {String} stateName This is the name od the state
+		 * @param {String} appName Name of the module 
+		 * @param {Object} stateData Data of the module that define its state 
+		 */
 		addStateToExistingWindows: function(stateName, appName, stateData){
 			
 			var me=this;
@@ -614,31 +703,11 @@ Ext.define(
 			
 		},
 		
-		refreshAppStates: function(appName){
-			
-			var me = this;
-			
-			me.cache.windows[appName]=null;
-			
-			Ext.Ajax.request({
-			    url: 'up/listAppState',
-			    params: {
-			        app: 	appName,
-			        obj: 	"application"
-			    },
-			    scope:me,
-			    success: function(response){
-			    	
-			    	var me = this;
-			    	var states = Ext.JSON.decode(response.responseText);
-			    	
-			    	me.cache.windows[appName]=states;
-			    	
-			    }
-			});
-			
-		},
-		
+		/**
+		 * Function used to refresh the states of a certain module (application)
+		 * and to update all instances of the module that are active at the moment
+		 * @param {String} appName Name of the module (application)
+		 */
 		oprRefreshAllAppStates: function(appName){
 			
 			var me = this;
@@ -646,7 +715,7 @@ Ext.define(
 			me.cache.windows[appName]=null;
 			
 			Ext.Ajax.request({
-			    url: 'up/listAppState',
+			    url: 'UP/listAppState',
 			    params: {
 			        app: 	appName,
 			        obj: 	"application"
@@ -668,6 +737,14 @@ Ext.define(
 			});
 			
 		},
+		
+		/**
+		 * Function to check if a  
+		 * state of a module is currently active (has been loaded)
+		 * @param {String} stateName Name of the state
+		 * @param {String} appName Name of the module (application)
+		 * @return {Boolean}
+		 */
 		isAnyActiveState: function(stateName,appName){
 			
 			var me = this;
@@ -687,6 +764,13 @@ Ext.define(
 			return oFound;
 			
 		},
+		
+		/**
+		 * Function to remove a state from the state lists of the 
+		 * instances of the same module
+		 * @param {String} stateName Name of the state
+		 * @param {String} appName Name of the module (application) 
+		 */
 		removeStateFromWindows: function(stateName, appName){
 			
 			var me=this;
@@ -698,6 +782,523 @@ Ext.define(
 					item.removeState(stateName);
 			});
 			
+		},
+		
+		/*
+		 * -------------------------END: BROADCAST METHODS FOR THE ACTIVE WINDOWS-------------------------
+		 */
+		
+		/*
+		 * ---------------------------------MANAGEMENT OF DESKTOP STATES--------------------------------------------
+		 */
+		
+		/**
+		 * Function that is executed when the Save button 
+		 * of the Save As form is pressed 
+		 */
+		oprSaveAsDesktopState : function() {
+			
+			var me = this;
+									
+			if (me.saveForm.getForm().isValid()) {
+				
+				var stateName = me.saveForm.getForm().findField("state_name").getValue();
+				
+				if(!me.isExistingState(stateName)){
+					
+					me.oprSendDataForSave(stateName,true);
+					
+				}else{
+					
+					Ext.MessageBox.alert('Message','State name already exists !');
+					
+				}
+				
+			}
+			
+		},
+		
+		/**
+		 * Function to check if a state exists 
+		 * among the list of desktop states
+		 * @param {String} stateName The name of the state
+		 */
+		isExistingState:function(stateName){
+			var me = this;
+
+			if( stateName in me.cache.desktop)
+				return true;
+			else
+				return false;
+	
+		},
+		
+		/**
+		 * Function to load a desktop state 
+		 * @param {String} stateName The name of the state
+		 */
+		oprLoadDesktopState: function(stateName){
+			
+			/*
+			 * First we have to check whether some other state is currently in use
+			 * so we have to give possibility to choose whether they want to continue to the chosen 
+			 * state or not
+			 */
+			
+			
+			var me = this;
+			var count = me.windows.getCount();
+			
+			if(count >0){
+				
+				/*
+				 * Two cases:
+				 * 	- There is an active desktop state
+				 *  - There is no active desktop state 
+				 */
+				if(me.currentDesktopState == ''){
+				
+					var ret=Ext.MessageBox.confirm('Confirm', 'Are you sure you want to close windows without saving them ?',
+						function(button) {
+							
+							var me = this;
+						    if (button === 'yes') {
+						    	
+						    	me.closeAllActiveWindows();
+						    	
+						    	me.loadDesktopStateData(stateName);
+						    	
+						    }
+					    },me);
+					
+				}else{
+					
+					var ret=Ext.MessageBox.confirm('Confirm', 'There is an active desktop state. Do you want to save the state before we load the new one ?',
+							function(button) {
+								
+								var me = this;
+							    if (button === 'yes') {
+							    	me.oprSendDataForSave(me.currentDesktopState,false);
+							    }
+							    
+							    me.closeAllActiveWindows();
+						    	me.loadDesktopStateData(stateName);
+						    	
+						    },me);
+					
+				}
+			}else{
+				
+				me.loadDesktopStateData(stateName);
+				
+			}
+			
+		},
+		
+		/**
+		 * Function to create all windows from a desktop state
+		 * @param {String} stateName The name of the state 
+		 */
+		loadDesktopStateData:function(stateName){
+			
+			var me = this;
+			
+			//get the state from the cache
+			var stateData = me.cache.desktop[stateName];
+			
+			for(var i=0,len=stateData["data"].length;i<len;i++){
+				
+				var appStateData = stateData["data"][i];
+				
+				me.app.createWindow(appStateData.name,appStateData);
+				
+				
+			}
+			
+			me.currentDesktopState = stateName;
+			
+		},
+		
+		/**
+		 * Function to close all active windows
+		 */
+		closeAllActiveWindows: function(){
+			
+			var me = this;
+			
+			me.windows.each(function(win) {
+				
+				win.close();
+				
+			});
+	
+			
+		},
+		
+		/**
+		 * Function to create and open the 
+		 * form for managing the desktop states
+		 */
+		formManageStates: function(){
+			
+			var me = this;
+
+			me.manageForm = Ext.widget(
+					'form',
+					{
+						layout : {
+							type : 'vbox',
+							align : 'stretch'
+						},
+						border : false,
+						bodyPadding : 10,
+
+						fieldDefaults : {
+							labelAlign : 'top',
+							labelWidth : 100,
+							labelStyle : 'font-weight:bold'
+						},
+						defaults : {
+							margins : '0 0 10 0'
+						},
+						items : [
+									{
+										 html: "<b>DESKTOP</b> states",
+									    xtype: "box"
+									},
+									{
+										 html: "<select size='10' multiple='multiple' style='width:100%'></select>",
+								         xtype: "box"
+									}
+								],
+
+						buttons : [
+								{
+									text : 'Delete selected states',
+									handler : me.oprDeleteSelectedStates,
+									scope: me
+								},   
+								{
+									text : 'Cancel',
+									handler : function() {
+										me.manageWindow.hide();
+									},
+									scope: me
+								}
+								 ]
+					});
+			
+			me.manageWindow = Ext.create('widget.window', {
+				height : 300,
+				width : 500,
+				title : 'Manage states',
+				layout : 'fit',
+				modal: true,
+				items : me.manageForm
+			});
+			
+			me.manageWindow.show();
+			me.fillSelectFieldWithStates();
+			
+		},
+		
+		/**
+		 * Function to delete selected desktop states 
+		 */
+		oprDeleteSelectedStates: function(){
+			
+			var me = this;
+			var oSelectField = document.getElementById(me.manageForm.getId()).getElementsByTagName("select")[0];
+			
+			for (var i = oSelectField.length - 1; i>=0; i--) {
+			    if (oSelectField.options[i].selected) {
+			    	
+			    /*
+			     * First we check whether there are instances of that 
+			     * state that are active
+			     */	
+
+			      var oStateName=oSelectField.options[i].value;	
+			    	
+			      if(! (me.currentDesktopState==oStateName) ){
+			    	  
+			    	  
+			    	  Ext.Ajax.request({
+						    url: 'UP/delAppState',
+						    params: {
+						    	app: "desktop",
+						    	name: 	oStateName,
+						        obj: "desktop"
+						    },
+						    success:Ext.bind(me.oprDeleteSelectedStates_s, me, [i,oSelectField], false) 
+						});
+			    	  
+			      }else
+			    	  Ext.MessageBox.alert('Message','The state <b>'+oSelectField.options[i].value+'</b> you are willing to delete is curently in use !');
+			    	
+			    	
+			      
+			    }
+			}
+			
+		},
+		
+		/**
+		 * Callback of the oprDeleteSelectedStates function
+		 * @param {Integer} index index of the selected element
+		 * @param {DOMObject} oSelectEl the select element of the management form 
+		 */
+		oprDeleteSelectedStates_s: function(index,oSelectEl){
+			
+			var me = this;
+			
+			var oStateName = oSelectEl.options[index].value;
+			
+			for(var i=0;i<me.statesMenu.items.length;i++){
+				
+				if(me.statesMenu.items.getAt(i).text==oStateName){
+					
+					me.statesMenu.remove(me.statesMenu.items.getAt(i));
+					break;
+					
+				}
+				
+			}
+			
+			oSelectEl.remove(index);
+			
+		},
+		
+		/**
+		 * Function to fill the select element 
+		 * with the existing desktop states
+		 */
+		fillSelectFieldWithStates: function(){
+			
+			var me = this;
+			var oSelectEl = document.getElementById(me.manageForm.getId()).getElementsByTagName("select")[0];
+			
+			for (i = oSelectEl.length - 1; i>=0; i--) 
+				oSelectEl.remove(i);
+			
+			for(var stateName in me.loadedObject.app.getDesktop().cache.windows[me.appClassName]){
+				
+				  var elOptNew = document.createElement('option');
+				  elOptNew.text = stateName;
+				  elOptNew.value = stateName;
+
+				  try {
+					  oSelectEl.add(elOptNew, null); // standards compliant; doesn't work in IE
+				  }
+				  catch(ex) {
+					  oSelectEl.add(elOptNew); // IE only
+				  }
+				  
+			}
+			  
+		},
+		
+		/**
+		 * Function to refresh the list of desktop states
+		 */
+		oprRefreshAllDesktopStates: function(){
+			
+			var me = this;
+			
+			me.statesMenu.removeAll();
+			delete me.cache.desktop;//[stateName]=states[stateName];
+			me.cache.desktop = {};
+			
+			Ext.Ajax.request({
+			    url: 'UP/listAppState',
+			    params: {
+			        app: 	"desktop",
+			        obj: 	"desktop"
+			    },
+			    scope:me,
+			    success: function(response){
+			    	
+			    	var me = this;
+			    	var states = Ext.JSON.decode(response.responseText);
+			    	me.cache.desktop={};
+			    	
+			    	for (var stateName in states) {	
+			    		
+			    		var newItem = Ext.create('Ext.menu.Item', {
+										    			  text: stateName,
+										    			  handler: Ext.bind(me.oprLoadDesktopState, me, [stateName], false),
+										    			  scope:me
+										    		});
+			    		
+			    		me.cache.desktop[stateName]=states[stateName];
+			    		
+			    		me.statesMenu.add(newItem);
+			    		
+			    	}
+			    	
+			    	
+			    }
+			});
+			
+		},
+		/**
+		 * Function called when the Save button 
+		 * from the desktop context menu is clicked 
+		 */
+		oprSaveDesktopState : function() {
+			
+			var me = this;
+			
+			if(me.currentDesktopState == ""){
+				
+				me.formSaveState();
+				
+			}else{
+				
+				me.oprSendDataForSave(me.currentDesktopState,false);
+			}
+		},
+		/**
+		 * Function called when the Save As ... button
+		 * from the desktop context menu is clicked
+		 */
+		formSaveState : function() {
+			
+			var me = this;
+
+			me.saveForm = Ext.widget(
+					'form',
+					{
+						layout : {
+							type : 'vbox',
+							align : 'stretch'
+						},
+						border : false,
+						bodyPadding : 10,
+
+						fieldDefaults : {
+							labelAlign : 'top',
+							labelWidth : 100,
+							labelStyle : 'font-weight:bold'
+						},
+						defaults : {
+							margins : '0 0 5 0'
+						},
+						items : [
+								{
+									xtype : 'fieldcontainer',
+									layout : 'hbox',
+									defaultType : 'textfield',
+
+									fieldDefaults : {
+										labelAlign : 'left'
+									},
+
+									items : [{
+												flex : 1,
+												fieldLabel: 'State Name',
+												name : 'state_name',
+												allowBlank : false
+											}]
+								}],
+
+						buttons : [
+								{
+									text : 'Save',
+									handler : me.oprSaveAsDesktopState,
+									scope: me
+								},   
+								{
+									text : 'Cancel',
+									handler : function() {
+										me.saveForm.getForm().reset();						
+										me.saveWindow.hide();
+									},
+									scope: me
+								}
+								 ]
+					});
+			
+			me.saveWindow = Ext.create('widget.window', {
+				height : 120,
+				width : 500,
+				title : 'Save state',
+				layout : 'fit',
+				modal: true,
+				items : me.saveForm
+			});
+			
+			me.saveWindow.show();
+
+		},	
+		/**
+		 * Function that is used to prepare and send 
+		 * the data of the desktop state to the server.
+		 * @param {String} stateName The name of the state
+		 * @param {Boolean} isNewItem Parameter that says whether the state already exists or not 
+		 */
+		oprSendDataForSave: function (stateName,isNewItem){
+			
+			var me = this;
+			
+			var dataToSend = {"data":[]};
+			
+			me.windows.each(function(win) {
+				
+				
+				dataToSend.data.push(
+						{
+							name: win.getAppClassName(),
+							currentState: win.currentState,
+							data: win.loadedObject.getStateData(),
+							x: win.x,
+							y: win.y,
+							width: win.getWidth(),
+							height: win.getHeight()
+							
+						}
+				
+				
+				);
+
+			});
+
+			
+			Ext.Ajax.request({
+			    url: 'UP/saveAppState',
+			    params: {
+			        app: 	"desktop",
+			        name: 	stateName,
+			        state: 	Ext.JSON.encode(dataToSend),
+			        obj: "desktop"
+			    },
+			    scope:me,
+			    success: function(response){
+			    	var me = this;
+			    	Ext.MessageBox.alert('Message','State saved successfully !');
+			    	if(isNewItem){
+			    		var newItem = Ext.create('Ext.menu.Item', {
+			    			  text: stateName,
+			    			  handler: Ext.bind(me.oprLoadDesktopState, me, [stateName], false),
+			    			  scope:me
+			    		});
+
+						me.statesMenu.add(newItem);
+						
+						me.cache.desktop[stateName]=dataToSend;
+						me.saveForm.getForm().reset();
+						me.saveWindow.hide();
+			    	}else
+			    		me.cache.desktop[stateName]=dataToSend;
+			    	
+			    	me.currentDesktopState = stateName;
+					
+			    }
+			});
+			
 		}
 		
+		/*
+		 * ---------------------------------END: MANAGEMENT OF DESKTOP STATES--------------------------------------------
+		 */
 	});

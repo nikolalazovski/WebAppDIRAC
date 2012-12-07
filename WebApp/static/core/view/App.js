@@ -72,9 +72,6 @@ Ext.define(
 			    	
 			    }
 			});
-			
-			
-			
 
 		},
 
@@ -82,20 +79,14 @@ Ext.define(
 
 			var me = this, desktopCfg;
 
-			/*
-			 * ?
-			 */
 			if (me.useQuickTips) {
 				Ext.QuickTips.init();
 			}
 
-			/*
-			 * 
-			 */
 			me.modules = this.configData["desktop_config"]["start_menu_config"];
 
 			/*
-			 * Creating the main desktop obbject
+			 * Creating the main desktop object
 			 */
 			desktopCfg = me.getDesktopConfig();
 			me.desktop = new Ext.ux.desktop.Desktop(desktopCfg);
@@ -208,7 +199,7 @@ Ext.define(
 				if (launcher) {
 					launcher.handler = launcher.handler
 							|| Ext.bind(me.createWindow, me,
-									[ module.name ]);
+									[ module.name,null ]);
 					cfg.menu.push(module.launcher);
 				}
 			});
@@ -245,32 +236,29 @@ Ext.define(
 		 *            moduleName The name of the module (the
 		 *            JavaScript class) to be loaded
 		 */
-		createWindow : function(moduleName) {
-
+		createWindow : function(moduleName,setupData) {
 			
-			
-			var view = Ext.create(moduleName);
-			view.init(this);
-			
-			
-			
-			var window = this.desktop.createWindow({
-                title : "Example",
-                width : 600,
-                height : 400,
-                iconCls : 'notepad',
-                animCollapse : false,
-                border : false,
-                hideMode : 'offsets',
-                layout : 'fit',
-                items : [view]
-              });
-			
-			
-			//view.setUID(++this._uid_counter);
-			window.setLoadedObject(view);
-			window.show();
+			Ext.require(moduleName, function() {
 				
+				var me = this;
+				var instance = Ext.create(moduleName);
+				instance.setUID(++me._uid_counter);	
+				var window = me.desktop.createWindow({
+					width : 600,
+					height : 400,
+					animCollapse : false,
+					border : false,
+					hideMode : 'offsets',
+					layout : 'fit',
+					desktop: me.desktop,
+					setupData: setupData,
+					loadedObject:instance
+				});
+				
+				window.show();
+				
+			},this);
+			
 		},
 
 		/**
