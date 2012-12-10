@@ -800,19 +800,10 @@ Ext.define(
 			
 			var me = this;
 									
-			if (me.saveForm.getForm().isValid()) {
+			if (me.saveForm.getForm().isValid()){
 				
 				var stateName = me.saveForm.getForm().findField("state_name").getValue();
-				
-				if(!me.isExistingState(stateName)){
-					
-					me.oprSendDataForSave(stateName,true);
-					
-				}else{
-					
-					Ext.MessageBox.alert('Message','State name already exists !');
-					
-				}
+				me.oprSendDataForSave(stateName,true);
 				
 			}
 			
@@ -1036,8 +1027,6 @@ Ext.define(
 			      }else
 			    	  Ext.MessageBox.alert('Message','The state <b>'+oSelectField.options[i].value+'</b> you are willing to delete is curently in use !');
 			    	
-			    	
-			      
 			    }
 			}
 			
@@ -1199,7 +1188,33 @@ Ext.define(
 												flex : 1,
 												fieldLabel: 'State Name',
 												name : 'state_name',
-												allowBlank : false
+												parentDesktop:me,
+												validateValue:function(value){
+													
+													value = Ext.util.Format.trim(value);
+													
+													if(Ext.util.Format.trim(value).length < 1){
+										                 this.markInvalid("You must specify a name !");
+										                 return false;
+											             
+											        }else{
+											        	
+											        	if(this.parentDesktop.isExistingState(Ext.util.Format.trim(value))){
+											        		
+											        		this.markInvalid("The name you enetered already exists !");
+											                return false;
+											        		
+											        	}else{
+											        		
+											        		this.clearInvalid();
+											                return true;
+											        		
+											        	}
+											        	
+											        	
+											        }
+													
+												}
 											}]
 								}],
 
@@ -1241,6 +1256,7 @@ Ext.define(
 		oprSendDataForSave: function (stateName,isNewItem){
 			
 			var me = this;
+			stateName = Ext.util.Format.trim(stateName);
 			
 			var dataToSend = {"data":[]};
 			
@@ -1276,7 +1292,7 @@ Ext.define(
 			    scope:me,
 			    success: function(response){
 			    	var me = this;
-			    	Ext.MessageBox.alert('Message','State saved successfully !');
+			    	Ext.example.msg("Notification", 'State saved successfully !');
 			    	if(isNewItem){
 			    		var newItem = Ext.create('Ext.menu.Item', {
 			    			  text: stateName,

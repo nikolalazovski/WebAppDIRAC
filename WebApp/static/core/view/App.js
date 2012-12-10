@@ -11,6 +11,7 @@
  * @mixins Ext.util.Observable
  * 
  */
+
 Ext.define(
 	'DIRACWebFramework.view.App',
 	{
@@ -101,6 +102,7 @@ Ext.define(
 
 			me.isReady = true;
 			me.fireEvent('ready', me);
+			setTimeout(function(){ Ext.get("loading").hide(); },1000);
 		},
 
 		/**

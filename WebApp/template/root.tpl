@@ -18,14 +18,9 @@
             'Ext.ux.desktop': '/DIRAC/static/core/view',
             'DIRAC':'/DIRAC/static/DIRAC',
         });
-
-        Ext.onReady(function () {
-            
-            setTimeout(function(){ Ext.get("loading").hide(); },1000);
-            
-        });
     </script>
     <script type="text/javascript" src="static/core/app.js"></script>
+    <script type="text/javascript" src="static/core/view/HelpFunctions.js"></script>
     <!-- </x-compile> -->
     <style type="text/css">
 	    #loading{
