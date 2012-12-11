@@ -13,8 +13,8 @@ from DIRAC.ConfigurationSystem.Client.Helpers import Registry
 
 class UPHandler( WebHandler ):
 
+  AUTH_PROPS = "authenticated"
   __tc = ThreadConfig()
-
 
   def prepare( self ):
     if not self.isRegisteredUser():
