@@ -111,7 +111,7 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 				me.mainFormPanel.submit({
 					url : GLOBAL.BASE_URL + 'JobLaunchpad/jobSubmit',
 					success : function(form, action) {
-						
+
 						me.getContainer().body.unmask();
 						if (action.result.success == 'false') {
 							GLOBAL.APP.CF.alert('Error: ' + action.result.error, 'error');
@@ -200,36 +200,7 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 			iconCls : "dirac-icon-reset",
 			handler : function() {
 
-				// first go through all optional fields and see if they are checked,
-				// remove and unchecked
-				for ( var i = 0; i < me.btnAddParameters.menu.items.length; i++) {
-
-					var oItem = me.btnAddParameters.menu.items.getAt(i);
-
-					if (oItem.checked) {
-						oItem.setChecked(false);
-						me.__destroyJdlField(oItem.text);
-					}
-
-				}
-
-				// go through the text fields and set the default values of the
-				// mandatory fields
-				for ( var sKey in me.textualFields) {
-
-					if (me.textualFields[sKey].mandatory) {
-
-						me.textualFields[sKey].object.setValue(me.textualFields[sKey].value);
-
-					}
-
-				}
-
-				// second remove all items from input sandbox container
-				me.fsetInputSandboxSection.removeAll();
-				me.oprAddNewFileField();
-				me.oprAddNewLfnTextField();
-				me.proxyCheckerFunction();
+				me.__resetForm();
 
 			},
 			scope : me
@@ -298,9 +269,48 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 
 	},
 
+	__resetForm : function() {
+
+		var me = this;
+		// first go through all optional fields and see if they are
+		// checked,
+		// remove and unchecked
+		for (var i = 0; i < me.btnAddParameters.menu.items.length; i++) {
+
+			var oItem = me.btnAddParameters.menu.items.getAt(i);
+
+			if (oItem.checked) {
+				oItem.setChecked(false);
+				me.__destroyJdlField(oItem.text);
+			}
+
+		}
+
+		// go through the text fields and set the default values of the
+		// mandatory fields
+		for ( var sKey in me.textualFields) {
+
+			if (me.textualFields[sKey].mandatory) {
+
+				me.textualFields[sKey].object.setValue(me.textualFields[sKey].value);
+
+			}
+
+		}
+
+		// second remove all items from input sandbox container
+		me.fsetInputSandboxSection.removeAll();
+		me.oprAddNewFileField();
+		me.oprAddNewLfnTextField();
+		me.proxyCheckerFunction();
+
+	},
+
 	__oprApplyToJdl : function() {
 
 		var me = this.moduleObject;
+
+		me.__resetForm();
 
 		var sPredefinedSet = me.predefinedSetsMenu.node.raw.text;
 
@@ -322,10 +332,11 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 
 			} else {
 
-				// remove all text fields and create new ones from the value to be
+				// remove all text fields and create new ones from the value to
+				// be
 				// applied
 
-				for ( var i = me.fsetInputSandboxSection.items.length - 1; i >= 0; i--) {
+				for (var i = me.fsetInputSandboxSection.items.length - 1; i >= 0; i--) {
 
 					var oItem = me.fsetInputSandboxSection.getComponent(i);
 
@@ -341,7 +352,7 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 				// now create new ones
 				var oLfns = me.predefinedSets[sPredefinedSet][sKey].split(",");
 
-				for ( var i = 0; i < oLfns.length; i++) {
+				for (var i = 0; i < oLfns.length; i++) {
 					me.oprAddNewLfnTextField(oLfns[i].substr(4));
 				}
 
@@ -367,15 +378,16 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 				change : function(oComp, sValue, eOpts) {
 
 					/*
-					 * First we check wheather there are empty file fields. If there is an
-					 * empty field, new field is not added to the list.
+					 * First we check wheather there are empty file fields. If
+					 * there is an empty field, new field is not added to the
+					 * list.
 					 */
 
 					var iLength = oComp.moduleObject.fsetInputSandboxSection.items.getCount();
 					var bAddFile = true;
 					var iIndex = 0;
 
-					for ( var i = 0; i < iLength; i++) {
+					for (var i = 0; i < iLength; i++) {
 						var oItem = oComp.moduleObject.fsetInputSandboxSection.getComponent(i);
 
 						if (oItem.self.getName() != "Ext.form.field.Text") {
@@ -397,13 +409,13 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 					}
 
 					/*
-					 * Then we calculate the size of the files. the function bytesToSize
-					 * is used here.
+					 * Then we calculate the size of the files. the function
+					 * bytesToSize is used here.
 					 */
 
 					var iSize = 0;
 
-					for ( var i = 0; i < iLength; i++) {
+					for (var i = 0; i < iLength; i++) {
 						var oItem = oComp.moduleObject.fsetInputSandboxSection.getComponent(i);
 
 						if (oItem.self.getName() != "Ext.form.field.Text") {
@@ -427,7 +439,7 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 		var iLength = me.fsetInputSandboxSection.items.getCount();
 		var iWhereInsert = 0;
 
-		for ( var i = 0; i < iLength; i++) {
+		for (var i = 0; i < iLength; i++) {
 			var oItem = me.fsetInputSandboxSection.getComponent(i);
 			if (oItem.self.getName() == "Ext.form.field.Text") {
 
@@ -509,8 +521,9 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 	getFileSize : function(oInputFile) {
 
 		/*
-		 * Can't use `typeof FileReader === "function"` because apparently it comes
-		 * back as "object" on some browsers. So just see if it's there at all
+		 * Can't use `typeof FileReader === "function"` because apparently it
+		 * comes back as "object" on some browsers. So just see if it's there at
+		 * all
 		 */
 
 		if (!window.FileReader) {
@@ -783,7 +796,7 @@ Ext.define('DIRAC.JobLaunchpad.classes.JobLaunchpad', {
 
 		if (bSetCheckbox) {
 
-			for ( var i = 0; i < me.btnAddParameters.menu.items.length; i++) {
+			for (var i = 0; i < me.btnAddParameters.menu.items.length; i++) {
 
 				var oItem = me.btnAddParameters.menu.items.getAt(i);
 
